@@ -1,4 +1,5 @@
-# 🇫🇷 Mot du jour API
+# 🇫🇷 Mot du jour API ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/jamesalexatkin/mot-du-jour-api)
+
 
 Mot du jour is a simple proxy API for to retrieve a random French word from [Wiktionary](https://en.wiktionary.org/wiki/Wiktionary:Random_page).
 
@@ -13,6 +14,8 @@ go run .
 ```
 
 ## ⚡ Usage
+
+### Word of the day
 
 Simply send a GET request to the API's `/mot_du_jour` endpoint like so:
 
@@ -34,3 +37,7 @@ You will receive a JSON output in the following format:
   ]
 }
 ```
+
+### Spontaneous word
+
+Alternatively, send a GET request to `/mot_spontane` for a freshly generated word on each call.
