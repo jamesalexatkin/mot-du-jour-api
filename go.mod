@@ -1,3 +1,3 @@
-module github.com/render-examples/go-web-server
+module github.com/jamesalexatkin/mot-du-jour-api
 
-go 1.23
+go 1.24
