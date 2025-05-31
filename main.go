@@ -1,14 +1,14 @@
 package main
 
 import (
+	_ "embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
-
-	_ "embed"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -59,11 +59,95 @@ type Meaning struct {
 func serveMotDuJour(w http.ResponseWriter, r *http.Request) {
 	doc, err := getWiktionaryRandomFrenchWordPage()
 	if err != nil {
-		// TODO: handle error response
+		// TODO: introduce better error handling
+		w.WriteHeader(http.StatusInternalServerError)
 
 		return
 	}
 
+	word := parseWiktionaryPage(doc)
+
+	// fmt.Printf("%+v\n", word)
+
+	marshalledWord, err := json.Marshal(&word)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	w.Write(marshalledWord)
+}
+
+// CleanMeanings removes any other Wiktionary elements parsed into the word's meanings.
+// Sections like Etymology and Derived Terms are present on the same level with h2 headings
+// so can easily end up here.
+//
+// Useful reference: https://en.wiktionary.org/wiki/Category:French_lemmas
+func (w *Word) CleanMeanings() {
+	var newMeanings []Meaning
+
+	for _, meanings := range w.Meanings {
+		if meanings.Type == "Adjective" ||
+			meanings.Type == "Adverb" ||
+			meanings.Type == "Article" ||
+			meanings.Type == "Conjunction" ||
+			meanings.Type == "Contraction" ||
+			meanings.Type == "Determiner" ||
+			meanings.Type == "Interfix" ||
+			meanings.Type == "Interjection" ||
+			meanings.Type == "Morpheme" ||
+			meanings.Type == "Multiword term" ||
+			meanings.Type == "Letter" ||
+			meanings.Type == "Noun" ||
+			meanings.Type == "Numeral" ||
+			meanings.Type == "Participle" ||
+			meanings.Type == "Phrase" ||
+			meanings.Type == "Prefix" ||
+			meanings.Type == "Preposition" ||
+			meanings.Type == "Prepositional phrase" ||
+			meanings.Type == "Postposition" ||
+			meanings.Type == "Proverb" ||
+			meanings.Type == "Proper noun" ||
+			meanings.Type == "Suffix" ||
+			meanings.Type == "Verb" {
+			newMeanings = append(newMeanings, meanings)
+		} else {
+			fmt.Printf("Unrecognised meaning type '%s'\n", meanings.Type)
+		}
+	}
+
+	w.Meanings = newMeanings
+}
+
+func getWiktionaryRandomFrenchWordPage() (*goquery.Document, error) {
+	// URL to make the HTTP request to
+	url := "https://en.wiktionary.org/wiki/Special:RandomInCategory/French_lemmas#French"
+
+	// Make the GET request
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println("couldn't complete request to wiktionary", "err", err)
+
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		// TODO: handle error
+
+		return nil, nil
+	}
+	defer resp.Body.Close()
+
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return doc, nil
+}
+
+func parseWiktionaryPage(doc *goquery.Document) Word {
 	word := Word{}
 
 	heading := doc.Find("h1").First()
@@ -106,7 +190,7 @@ func serveMotDuJour(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			if h2Section.Text() != "French" {
-				fmt.Printf("found another language '%s', stopping\n", h2Section.Text())
+				// fmt.Printf("found another language '%s', stopping\n", h2Section.Text())
 
 				break
 			}
@@ -154,67 +238,5 @@ func serveMotDuJour(w http.ResponseWriter, r *http.Request) {
 
 	word.CleanMeanings()
 
-	fmt.Printf("%+v\n", word)
-}
-
-// CleanMeanings removes any other Wiktionary elements parsed into the word's meanings.
-// Sections like Etymology and Derived Terms are present on the same level with h2 headings
-// so can easily end up here.
-func (w *Word) CleanMeanings() {
-	var newMeanings []Meaning
-
-	for _, meanings := range w.Meanings {
-		if meanings.Type == "Adjective" ||
-			meanings.Type == "Adverb" ||
-			meanings.Type == "Article" ||
-			meanings.Type == "Conjunction" ||
-			meanings.Type == "Contraction" ||
-			meanings.Type == "Determiner" ||
-			meanings.Type == "Interfix" ||
-			meanings.Type == "Interjection" ||
-			meanings.Type == "Morpheme" ||
-			meanings.Type == "Multiword term" ||
-			meanings.Type == "Letter" ||
-			meanings.Type == "Noun" ||
-			meanings.Type == "Numeral" ||
-			meanings.Type == "Phrase" ||
-			meanings.Type == "Prefix" ||
-			meanings.Type == "Preposition" ||
-			meanings.Type == "Postposition" ||
-			meanings.Type == "Proverb" ||
-			meanings.Type == "Proper noun" ||
-			meanings.Type == "Suffix" ||
-			meanings.Type == "Verb" {
-			newMeanings = append(newMeanings, meanings)
-		}
-	}
-
-	w.Meanings = newMeanings
-}
-
-func getWiktionaryRandomFrenchWordPage() (*goquery.Document, error) {
-	// URL to make the HTTP request to
-	url := "https://en.wiktionary.org/wiki/Special:RandomInCategory/French_lemmas#French"
-
-	// Make the GET request
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Println("couldn't complete request to wiktionary", "err", err)
-
-		return nil, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		// TODO: handle error
-
-		return nil, nil
-	}
-	defer resp.Body.Close()
-
-	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return doc, nil
+	return word
 }
