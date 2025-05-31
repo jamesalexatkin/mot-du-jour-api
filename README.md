@@ -1,5 +1,36 @@
-# Go Web Server
+# 🇫🇷 Mot du jour API
 
-This repo can be used as a starting point to deploy [Go](https://golang.org/) web applications on Render.
+Mot du jour is a simple proxy API for to retrieve a random French word from [Wiktionary](https://en.wiktionary.org/wiki/Wiktionary:Random_page).
 
-It's a simple `net/http` Go webserver that embeds an HTML file and serves it.
+It returns the word in a structured JSON format, making it easier for other applications to consume (since Wiktionary itself doesn't currently offer an official API).
+
+## 🏃 To run
+
+Clone the repo and run
+
+```bash
+go run .
+```
+
+## ⚡ Usage
+
+Simply send a GET request to the API's `/mot_du_jour` endpoint like so:
+
+```bash
+curl http://localhost:8080/mot_du_jour
+```
+
+You will receive a JSON output in the following format:
+
+```json
+{
+  "Name": "œil poché",
+  "Meanings": [
+    {
+      "Type": "Noun",
+      "Gender": "masc.",
+      "Definitions": ["black eye"]
+    }
+  ]
+}
+```
