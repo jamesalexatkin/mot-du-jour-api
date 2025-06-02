@@ -45,3 +45,9 @@ Send a GET request to `/mot_du_heure` for the hourly word.
 ### Spontaneous word
 
 Send a GET request to `/mot_spontane` for a freshly generated word on each call.
+
+### Specific word
+
+Send a GET request to `/mot_specifique?mot=<your_word>` for a freshly generated word on each call.
+
+This can be useful for testing to ensure determinism, or just for forcing a particular word to display.

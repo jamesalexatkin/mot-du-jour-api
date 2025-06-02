@@ -23,6 +23,7 @@ func main() {
 	http.HandleFunc("/mot_du_jour", serveMotDuJour)
 	http.HandleFunc("/mot_du_heure", serveMotDuHeure)
 	http.HandleFunc("/mot_spontane", serveMotSpontane)
+	http.HandleFunc("/mot_specifique", serveMotSpecifique)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -88,6 +89,35 @@ func serveMotDuHeure(w http.ResponseWriter, r *http.Request) {
 
 func serveMotSpontane(w http.ResponseWriter, r *http.Request) {
 	doc, err := wiktionary.GetRandomFrenchWordPage()
+	if err != nil {
+		// TODO: introduce better error handling
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	word := wiktionary.ParseWordFromPage(doc)
+
+	marshalledWord, err := json.Marshal(&word)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	w.Write(marshalledWord)
+}
+
+func serveMotSpecifique(w http.ResponseWriter, r *http.Request) {
+	wordParam := r.URL.Query().Get("mot")
+	if wordParam == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("mot param missing"))
+
+		return
+	}
+
+	doc, err := wiktionary.GetSpecificFrenchWordPage(wordParam)
 	if err != nil {
 		// TODO: introduce better error handling
 		w.WriteHeader(http.StatusInternalServerError)

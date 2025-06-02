@@ -38,6 +38,34 @@ func GetRandomFrenchWordPage() (*goquery.Document, error) {
 	return doc, nil
 }
 
+// GetSpecificFrenchWordPage fetches a specific French word page from Wiktionary.
+func GetSpecificFrenchWordPage(wordParam string) (*goquery.Document, error) {
+	// URL to make the HTTP request to
+	url := "https://en.wiktionary.org/wiki/" + wordParam
+
+	// Make the GET request
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println("couldn't complete request to wiktionary", "err", err)
+
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		// TODO: handle error
+
+		return nil, nil
+	}
+	defer resp.Body.Close()
+
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return doc, nil
+}
+
 // ParseWordFromPage parses a Wiktionary HTML page into a word struct,
 // extracting meanings and definitions.
 func ParseWordFromPage(doc *goquery.Document) model.Word {
