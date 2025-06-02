@@ -38,6 +38,10 @@ You will receive a JSON output in the following format:
 }
 ```
 
+### Word of the hour
+
+Send a GET request to `/mot_du_heure` for the hourly word.
+
 ### Spontaneous word
 
-Alternatively, send a GET request to `/mot_spontane` for a freshly generated word on each call.
+Send a GET request to `/mot_spontane` for a freshly generated word on each call.

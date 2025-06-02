@@ -14,10 +14,14 @@ import (
 )
 
 var motDuJour model.Word
-var lastFetched time.Time
+var lastFetchedMotDuJour time.Time
+
+var motDuHeure model.Word
+var lastFetchedMotDuHeure time.Time
 
 func main() {
 	http.HandleFunc("/mot_du_jour", serveMotDuJour)
+	http.HandleFunc("/mot_du_heure", serveMotDuHeure)
 	http.HandleFunc("/mot_spontane", serveMotSpontane)
 
 	port := os.Getenv("PORT")
@@ -34,7 +38,7 @@ func main() {
 
 func serveMotDuJour(w http.ResponseWriter, r *http.Request) {
 	// Fetch new word if it's been more than a day since the last one
-	if time.Since(lastFetched) > 24*time.Hour {
+	if time.Since(lastFetchedMotDuJour) > 24*time.Hour {
 		doc, err := wiktionary.GetRandomFrenchWordPage()
 		if err != nil {
 			// TODO: introduce better error handling
@@ -44,10 +48,35 @@ func serveMotDuJour(w http.ResponseWriter, r *http.Request) {
 		}
 
 		motDuJour = wiktionary.ParseWordFromPage(doc)
-		lastFetched = time.Now()
+		lastFetchedMotDuJour = time.Now()
 	}
 
 	marshalledWord, err := json.Marshal(&motDuJour)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	w.Write(marshalledWord)
+}
+
+func serveMotDuHeure(w http.ResponseWriter, r *http.Request) {
+	// Fetch new word if it's been more than an hour since the last one
+	if time.Since(lastFetchedMotDuHeure) > time.Hour {
+		doc, err := wiktionary.GetRandomFrenchWordPage()
+		if err != nil {
+			// TODO: introduce better error handling
+			w.WriteHeader(http.StatusInternalServerError)
+
+			return
+		}
+
+		motDuHeure = wiktionary.ParseWordFromPage(doc)
+		lastFetchedMotDuHeure = time.Now()
+	}
+
+	marshalledWord, err := json.Marshal(&motDuHeure)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 
