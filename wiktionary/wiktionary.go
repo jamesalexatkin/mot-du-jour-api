@@ -138,12 +138,11 @@ func ParseWordFromPage(doc *goquery.Document) model.Word {
 			}
 		case "ol":
 			// The ordered list contains the definitions as list items
-			n.Find("li").Each(func(_ int, listItem *goquery.Selection) {
+			// We get direct children since sometimes quotations can be later <li>s a few levels down
+			n.ChildrenFiltered("li").Each(func(_ int, listItem *goquery.Selection) {
 				// Some definitions come with usage examples
 				// These are always on a second line, so we split on new lines to cut them out
 				justDefinition := strings.Split(listItem.Text(), "\n")[0]
-
-				// TODO: fix bug in here with quotations being pulled through on some words
 
 				current.Definitions = append(current.Definitions, justDefinition)
 			})
